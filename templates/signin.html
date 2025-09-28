@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Landing Page de Cadastro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-b from-blue-400 to-blue-600 min-h-screen flex flex-col items-center justify-center">
+  <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+    <h1 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Cadastro</h1>
+    <form action="/register" method="POST" class="space-y-4">
+      <div>
+        <label class="block text-gray-700 font-medium mb-2" for="nome">Nome Completo</label>
+        <input type="text" id="nome" name="nome" required class="w-full px-4 py-2 rounded border border-gray-300 focus:border-blue-500 focus:outline-none" />
+      </div>
+      <div>
+        <label class="block text-gray-700 font-medium mb-2" for="email">E-mail</label>
+        <input type="email" id="email" name="email" required class="w-full px-4 py-2 rounded border border-gray-300 focus:border-blue-500 focus:outline-none" />
+      </div>
+      <div>
+        <label class="block text-gray-700 font-medium mb-2" for="senha">Senha</label>
+        <input type="password" id="senha" name="senha" required class="w-full px-4 py-2 rounded border border-gray-300 focus:border-blue-500 focus:outline-none" />
+      </div>
+      <button type="submit" class="w-full py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 transition-colors">Cadastrar</button>
+    </form>
+  </div>
+</body>
+</html>
