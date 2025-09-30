@@ -77,6 +77,11 @@ def get_all_users():
     connection.commit()
     data=cursor.fetchall()
     return data
+def verify_user(senha:str,usuario:str):
+    connection=sqlite3.connect('datas.db')
+    cursor=connection.cursor()
+    cursor.execute("SELECT * FROM users WHERE usuario=? AND senha=?",(usuario,senha))
+    connection.commit()
+    user=cursor.fetchone()
+    return user is not None
 
-create_eventos_table()
-create_user_table()

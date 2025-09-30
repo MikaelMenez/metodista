@@ -23,25 +23,24 @@ def log_in(request:Request):
     return templates.TemplateResponse('login.html',context={'request':request,"login_error":False})
 @app.post("/login")
 def login(request:Request,email:str=Form(...),senha:str=Form(...)):
-    try:
-        get_user(email,senha)
-        return RedirectResponse('/calendar') 
-    except Exception as e:   
-        print(e)
+    if verify_user(senha,email):
+        return templates.TemplateResponse(name="calendar.html",request=request)
+    else:   
         return templates.TemplateResponse('login.html',context={'request':request,'login_error':True})
 @app.post("/register",response_class=HTMLResponse)
 def register(request:Request,senha:str= Form(...),email:str =Form(...),nome:str=Form(...)):
     insert_user(senha=senha,usuario=email,tipo='usuario')
     return RedirectResponse('/index.html')
-@app.get("/eventos")
+@app.get("/events")
 async def get_eventos():
     eventos=get_all_eventos()
     lista_eventos=[]
     for evento in eventos:
         lista_eventos.append({
-            'id':evento[0],
-            'start':evento[1],
-            'title':evento[2]
+            "id":evento[0],
+            "title":evento[2],
+            "start":evento[1]
+            
         })
     print(lista_eventos)
     return JSONResponse(lista_eventos)
