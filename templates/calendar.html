@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>Calendário com dhtmlxScheduler - View Only</title>
+  <title>Calendário dhtmlxScheduler com Zoom no Dia</title>
 
   <!-- CSS do dhtmlxScheduler -->
   <link rel="stylesheet" href="https://cdn.dhtmlx.com/scheduler/edge/dhtmlxscheduler.css" />
@@ -25,13 +25,19 @@
   <script src="https://cdn.dhtmlx.com/scheduler/edge/dhtmlxscheduler.js"></script>
 
   <script>
-    // Configura o scheduler como somente leitura
-    scheduler.config.readonly = true;
+    scheduler.config.readonly = true; // desabilita edição
 
-    // Inicializa o scheduler
+    // Inicializa no mês
     scheduler.init("scheduler_here", new Date(), "month");
 
-    // Busca os eventos do backend
+    // Evento para zoom no dia clicado
+    scheduler.attachEvent("onClick", function(id, e){
+      // Troca para vista diária
+      scheduler.setCurrentView(scheduler.getEvent(id).start_date, "day");
+      return true; // Retorna true para continuar processamento
+    });
+
+    // Buscar eventos do backend e adicionar ao calendário
     fetch('/events')
       .then(response => response.json())
       .then(events => {
