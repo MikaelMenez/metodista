@@ -1,4 +1,4 @@
-from fastapi import FastAPI,Request,Form
+from fastapi import FastAPI,Request,Form,Cookie
 from fastapi.responses import HTMLResponse,JSONResponse,RedirectResponse
 from fastapi.templating import Jinja2Templates
 import calendar
@@ -17,11 +17,15 @@ async def calendar(request:Request):
    
     return templates.TemplateResponse(name="calendar.html",request=request)
 @app.get("/sign_in",response_class=HTMLResponse)
-def register(request:Request):
-    
-    return templates.TemplateResponse('signin.html',context={'request':request})
+def register(request:Request,usuario:str=Cookie(None)):
+    if not usuario:
+        return templates.TemplateResponse('signin.html',context={'request':request})
+    else: 
+        return templates.TemplateResponse(name="calendar.html",request=request)
+
 @app.post('/signin')
 async def register_post(request:Request,email:str=Form(...),nome:str=Form(...),senha:str=Form(...)):
+    
     insert_user(senha=senha,usuario=email,tipo='usuario',nome=nome)
     response=templates.TemplateResponse(name="calendar.html",request=request)
     response.set_cookie(key="usuario",value=email,max_age=3600,httponly=True)
@@ -30,8 +34,11 @@ async def register_post(request:Request,email:str=Form(...),nome:str=Form(...),s
     return response
 
 @app.get('/log_in',response_class=HTMLResponse)
-def log_in(request:Request):
-    return templates.TemplateResponse('login.html',context={'request':request,"login_error":False})
+def log_in(request:Request,usuario:str=Cookie(None)):
+    if not usuario:
+        return templates.TemplateResponse('login.html',context={'request':request})
+    else: 
+        return templates.TemplateResponse(name="calendar.html",request=request)
 @app.post("/login")
 def login(request:Request,email:str=Form(...),senha:str=Form(...)):
     if verify_user(senha,email):
