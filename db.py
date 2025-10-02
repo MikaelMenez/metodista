@@ -76,6 +76,13 @@ def get_all_eventos():
     connection.commit()
     data=cursor.fetchall()
     return data
+def get_all_eventos_by_user(usuario:str):
+    connection=sqlite3.connect('datas.db')
+    cursor=connection.cursor()
+    cursor.execute("SELECT * FROM eventos WHERE usuario=?",(usuario,))
+    connection.commit()
+    data=cursor.fetchall()
+    return data
 
 def get_all_users():
     connection=sqlite3.connect('datas.db')

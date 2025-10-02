@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calendário dhtmlxScheduler com Zoom no Dia</title>
+
+  <!-- CSS do dhtmlxScheduler -->
+  <link rel="stylesheet" href="https://cdn.dhtmlx.com/scheduler/edge/dhtmlxscheduler.css" />
+
+  <style>
+    html, body{
+      margin:0; padding:0; height:100%;
+      font-family: Verdana, Arial, sans-serif;
+    }
+    #scheduler_here {
+      width: 100%;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="scheduler_here"></div>
+
+  <!-- JS do dhtmlxScheduler -->
+  <script src="https://cdn.dhtmlx.com/scheduler/edge/dhtmlxscheduler.js"></script>
+
+  <script>
+    scheduler.config.readonly = true; // desabilita edição
+
+    // Inicializa no mês
+    scheduler.init("scheduler_here", new Date(), "month");
+
+    // Evento para zoom no dia clicado
+    scheduler.attachEvent("onClick", function(id, e){
+      // Troca para vista diária
+      scheduler.setCurrentView(scheduler.getEvent(id).start_date, "day");
+      return true; // Retorna true para continuar processamento
+    });
+
+    // Buscar eventos do backend e adicionar ao calendário
+    fetch('/events_by_user')
+      .then(response => response.json())
+      .then(events => {
+        events.forEach(event => {
+          scheduler.addEvent({
+            id: event.id,
+            text: event.title,
+            start_date: new Date(event.start),
+            end_date: new Date(event.start)
+          });
+        });
+      })
+      .catch(err => {
+        console.error("Falha ao carregar eventos:", err);
+      });
+  </script>
+</body>
+</html>
