@@ -3,41 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <title>Calendário dhtmlxScheduler com Zoom no Dia</title>
-
-  <!-- CSS do dhtmlxScheduler -->
   <link rel="stylesheet" href="https://cdn.dhtmlx.com/scheduler/edge/dhtmlxscheduler.css" />
-
   <style>
-    html, body{
-      margin:0; padding:0; height:100%;
+    html, body {
+      margin: 0; padding: 0; height: 100%;
       font-family: Verdana, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
     }
+    /* Botão estilizado */
+    .botao-pagina {
+      margin: 10px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+      width: fit-content;
+    }
+    /* Container do calendário ajustado */
     #scheduler_here {
-      width: 100%;
-      height: 100vh;
+      flex: 1; /* ocupa todo o espaço restante */
+      width: 100%; /* ocupa toda a largura do container */
     }
   </style>
 </head>
 <body>
+  <!-- Botão que leva para eventos.html -->
+  <a href="eventos.html" class="botao-pagina">Marcar Consulta</a>
+
   <div id="scheduler_here"></div>
 
-  <!-- JS do dhtmlxScheduler -->
   <script src="https://cdn.dhtmlx.com/scheduler/edge/dhtmlxscheduler.js"></script>
-
   <script>
-    scheduler.config.readonly = true; // desabilita edição
-
-    // Inicializa no mês
+    scheduler.config.readonly = true; // desliga edição
     scheduler.init("scheduler_here", new Date(), "month");
-
-    // Evento para zoom no dia clicado
+    
+    // Evento que faz o zoom no dia ao clicar
     scheduler.attachEvent("onClick", function(id, e){
-      // Troca para vista diária
       scheduler.setCurrentView(scheduler.getEvent(id).start_date, "day");
-      return true; // Retorna true para continuar processamento
+      return true;
     });
 
-    // Buscar eventos do backend e adicionar ao calendário
+    // Carrega eventos via API
     fetch('/events_by_user')
       .then(response => response.json())
       .then(events => {
@@ -50,9 +59,7 @@
           });
         });
       })
-      .catch(err => {
-        console.error("Falha ao carregar eventos:", err);
-      });
+      .catch(err => console.error("Falha ao carregar eventos:", err));
   </script>
 </body>
 </html>
