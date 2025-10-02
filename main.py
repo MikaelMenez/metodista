@@ -73,15 +73,21 @@ def register(request:Request,senha:str= Form(...),email:str =Form(...),nome:str=
 
 @app.get("/events_by_user")
 async def get_eventos(usuario:str=Cookie(...)):
-    eventos=get_all_eventos_by_user(usuario)
+    eventos=get_all_eventos()
     lista_eventos=[]
     for evento in eventos:
-        lista_eventos.append({
+        if evento[2]== usuario:
+            lista_eventos.append({
             "id":evento[0],
-            "title":evento[2],
+            "title":"sua consulta",
             "start":evento[1]
-            
-        })
+            })
+        else:
+            lista_eventos.append({
+            "id":evento[0],
+            "title":"ocupado",
+            "start":evento[1]
+            })
     print(lista_eventos)
     return JSONResponse(lista_eventos)
 @app.get("/events")
@@ -91,7 +97,7 @@ async def get_eventos():
     for evento in eventos:
         lista_eventos.append({
             "id":evento[0],
-            "title":evento[2],
+            "title":get_user(evento[2])[4] ,
             "start":evento[1]
             
         })
