@@ -21,6 +21,23 @@ async def calendar(request:Request,permissoes:str=Cookie(...)):
    else:
     return RedirectResponse("/calendar_user")
 
+@app.get('/eventos')
+def eventos(request:Request):
+    return templates.TemplateResponse("eventos.html",context={"request":request})
+
+@app.get("/diasproibidos")
+async def dias_proibidos(request:Request):
+    dias=get_all_eventos()
+    lista_dias=[]
+    for dia in dias:
+        lista_dias.append(
+            dia[1])
+
+    return JSONResponse(lista_dias)
+@app.post("/marca_consulta")
+async def marca_consulta(data:str=Form(...),usuario:str=Cookie(...)):
+    insert_eventos(data,usuario)
+    return RedirectResponse("/calendar",status_code=303)
 
 @app.get("/calendar_admin",response_class=HTMLResponse)
 async def calendar_admin(request:Request):
@@ -29,6 +46,7 @@ async def calendar_admin(request:Request):
 @app.get("/calendar_user",response_class=HTMLResponse)
 async def calendar_user(request:Request):
     return templates.TemplateResponse("calendar_user.html",context={"request":request})
+
 @app.get("/sign_in",response_class=HTMLResponse)
 def register(request:Request,usuario:str=Cookie(None)):
     if not usuario:
@@ -95,9 +113,10 @@ async def get_eventos():
     eventos=get_all_eventos()
     lista_eventos=[]
     for evento in eventos:
+        
         lista_eventos.append({
             "id":evento[0],
-            "title":get_user(evento[2])[4] ,
+            "title":evento[2] ,
             "start":evento[1]
             
         })

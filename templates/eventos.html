@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calendário com Pikaday Dinâmico</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pikaday/css/pikaday.css" />
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      font-family: Verdana, Arial, sans-serif;
+      background-color: #f3f4f6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 5px 15px rgb(0 0 0 / 0.1);
+      width: 320px;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .is-disabled {
+      background-color: #b30000 !important; /* vermelho forte */
+      color: #ffffff !important;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+    .aviso-vermelho {
+      color: #b30000;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-2xl font-bold mb-4 text-gray-700">Selecionar Data com Pikaday</h1>
+    <p class="aviso-vermelho">Datas em vermelho são dias proibidos</p>
+    <form id="meuForm" method="POST" action="/marca_consulta">
+      <input type="hidden" name="data" id="data" />
+      <input type="text" id="datepicker" placeholder="Selecione a data (dd/mm/aaaa)" readonly class="w-full p-2 border border-gray-300 rounded mb-4" />
+      <p id="msg-erro" class="mt-2 text-red-600 font-semibold" style="display:none;">Data proibida!</p>
+      <button type="submit" class="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Confirmar</button>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/pikaday/pikaday.js"></script>
+  <script>
+    // Busca a lista de dias proibidos do backend
+    fetch('/diasproibidos')
+      .then(response => response.json())
+      .then(diasProibidos => {
+        function dateInDiasProibidos(date) {
+          const yyyy = date.getFullYear();
+          const mm = (date.getMonth() + 1).toString().padStart(2, "0");
+          const dd = date.getDate().toString().padStart(2, "0");
+          return diasProibidos.includes(`${yyyy}-${mm}-${dd}`);
+        }
+
+        const picker = new Pikaday({
+          field: document.getElementById('datepicker'),
+          format: 'DD/MM/YYYY',
+          i18n: {
+            previousMonth : 'Mês Anterior',
+            nextMonth     : 'Próximo Mês',
+            months        : ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+            weekdays      : ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'],
+            weekdaysShort : ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
+          },
+          disableDayFn: function(date) {
+            return dateInDiasProibidos(date);
+          },
+          onSelect: function(date) {
+            if(dateInDiasProibidos(date)) {
+              document.getElementById('msg-erro').style.display = "";
+              this.setDate(null);
+              document.getElementById('data').value = "";
+            } else {
+              document.getElementById('msg-erro').style.display = "none";
+              const dd = date.getDate().toString().padStart(2, '0');
+              const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+              const yyyy = date.getFullYear();
+              document.getElementById('data').value = `${yyyy}-${mm}-${dd}`;
+              this._o.field.value = `${dd}/${mm}/${yyyy}`;
+            }
+          }
+        });
+      });
+
+    document.getElementById('meuForm').addEventListener('submit', function(event) {
+      if (!document.getElementById('data').value) {
+        document.getElementById('msg-erro').textContent = "Por favor, selecione uma data válida!";
+        document.getElementById('msg-erro').style.display = "";
+        event.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>
