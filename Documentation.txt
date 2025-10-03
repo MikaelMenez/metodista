@@ -1,0 +1,254 @@
+documente esse código e suas apis:
+
+from fastapi import FastAPI,Request,Form,Cookie
+from fastapi.responses import HTMLResponse,JSONResponse,RedirectResponse
+from fastapi.templating import Jinja2Templates
+import calendar
+import datetime
+from db import *
+ 
+app=FastAPI()
+templates=Jinja2Templates(directory="templates")
+create_eventos_table()
+create_user_table()
+ 
+ 
+@app.get('/')
+def landing_page(request:Request):
+    return templates.TemplateResponse('index.html',context={"request":request})
+@app.get("/calendar",response_class=RedirectResponse)
+async def calendar(request:Request,permissoes:str=Cookie(...)):
+   if permissoes== 'admin':
+    return RedirectResponse("/calendar_admin")
+   else:
+    return RedirectResponse("/calendar_user")
+ 
+@app.get('/eventos')
+def eventos(request:Request):
+    return templates.TemplateResponse("eventos.html",context={"request":request})
+ 
+@app.get("/diasproibidos")
+async def dias_proibidos(request:Request):
+    dias=get_all_eventos()
+    lista_dias=[]
+    for dia in dias:
+        lista_dias.append(
+            dia[1])
+ 
+    return JSONResponse(lista_dias)
+@app.post("/marca_consulta")
+async def marca_consulta(data:str=Form(...),usuario:str=Cookie(...)):
+    insert_eventos(data,usuario)
+    return RedirectResponse("/calendar",status_code=303)
+ 
+@app.get("/calendar_admin",response_class=HTMLResponse)
+async def calendar_admin(request:Request):
+    return templates.TemplateResponse("calendar_admin.html",context={"request":request})
+ 
+@app.get("/calendar_user",response_class=HTMLResponse)
+async def calendar_user(request:Request):
+    return templates.TemplateResponse("calendar_user.html",context={"request":request})
+ 
+@app.get("/sign_in",response_class=HTMLResponse)
+def register(request:Request,usuario:str=Cookie(None)):
+    if not usuario:
+        return templates.TemplateResponse('signin.html',context={'request':request})
+    else: 
+        return RedirectResponse("/calendar")
+ 
+@app.post('/signin')
+async def register_post(request:Request,email:str=Form(...),nome:str=Form(...),senha:str=Form(...)):
+    
+    insert_user(senha=senha,usuario=email,tipo='usuario',nome=nome)
+    response= RedirectResponse("/calendar",status_code=303)
+ 
+    response.set_cookie(key="usuario",value=email,max_age=3600,httponly=True)
+    tipo=get_user(usuario=email)
+    response.set_cookie(key="permissoes",value=tipo[3],max_age=3600,httponly=True)
+    return response
+ 
+@app.get('/log_in',response_class=HTMLResponse)
+def log_in(request:Request,usuario:str=Cookie(None)):
+    if not usuario:
+        return templates.TemplateResponse('login.html',context={'request':request})
+    else: 
+        return RedirectResponse("/calendar")
+    
+@app.post("/login")
+def login(request:Request,email:str=Form(...),senha:str=Form(...)):
+    if verify_user(senha,email):
+        response= RedirectResponse("/calendar",status_code=303)
+ 
+        response.set_cookie(key="usuario",value=email,max_age=3600,httponly=True)
+        tipo=get_user(usuario=email)
+        response.set_cookie(key="permissoes",value=tipo[3],max_age=3600,httponly=True)
+        return response
+    else:   
+        return templates.TemplateResponse('login.html',context={'request':request,'login_error':True})
+    
+@app.post("/register",response_class=HTMLResponse)
+def register(request:Request,senha:str= Form(...),email:str =Form(...),nome:str=Form(...)):
+    insert_user(senha=senha,usuario=email,tipo='usuario')
+    return RedirectResponse('/',status_code=303)
+ 
+@app.get("/events_by_user")
+async def get_eventos(usuario:str=Cookie(...)):
+    eventos=get_all_eventos()
+    lista_eventos=[]
+    for evento in eventos:
+        if evento[2] == usuario:
+            lista_eventos.append({
+            "id":evento[0],
+            "title":"sua consulta",
+            "start":evento[1]
+            })
+        else:
+            lista_eventos.append({
+            "id":evento[0],
+            "title":"ocupado",
+            "start":evento[1]
+            })
+    print(lista_eventos)
+    return JSONResponse(lista_eventos)
+@app.get("/events")
+async def get_eventos():
+    eventos=get_all_eventos()
+    lista_eventos=[]
+    for evento in eventos:
+        
+        lista_eventos.append({
+            "id":evento[0],
+            "title":get_user(evento[2])[-1] ,
+            "start":evento[1]
+            
+        })
+    print(lista_eventos)
+    return JSONResponse(lista_eventos)
+ 
+@app.get('/users')
+async def get_users():
+    users=get_all_users()
+    lista_users=[]
+    for user in users:
+        lista_users.append({
+            "id":user[0],
+            "email":user[2],
+            "permissões":user[3],
+            "nome":user[4]
+            
+        })
+    print(lista_users)
+    return JSONResponse(lista_users)
+
+Aqui está a documentação detalhada do código FastAPI apresentado e suas APIs:
+
+***
+
+## Descrição geral do projeto
+
+Este é um projeto web baseado em FastAPI para gerenciamento de eventos/consultas e usuários. Contém autenticação via cookies, templates HTML com Jinja2, APIs para eventos e usuários, e redirecionamentos baseados em permissões de usuário (admin ou usuário comum). O projeto usa SQLite por meio de funções auxiliares (no módulo `db`) para operações de CRUD.
+
+***
+
+## Configuração inicial
+
+- Instancia a aplicação FastAPI.
+- Configura templates Jinja2 na pasta `templates`.
+- Cria, no banco de dados (SQLite presumivelmente), as tabelas de eventos (`create_eventos_table()`) e usuários (`create_user_table()`).
+
+***
+
+## Rotas e suas funcionalidades
+
+### Rota principal
+
+- **`GET /`**  
+  Retorna a página inicial (template `index.html`).  
+  Parâmetros: `request` (objeto Request do FastAPI para template).  
+
+***
+
+### Sistema de calendário e permissões
+
+- **`GET /calendar`**  
+  Verifica cookie `permissoes`.  
+  Se valor for `'admin'`, redireciona para `/calendar_admin`, senão redireciona para `/calendar_user`.
+
+- **`GET /calendar_admin`**  
+  Exibe calendário administrativo (`calendar_admin.html`).
+
+- **`GET /calendar_user`**  
+  Exibe calendário do usuário comum (`calendar_user.html`).
+
+***
+
+### Eventos
+
+- **`GET /eventos`**  
+  Retorna página HTML `eventos.html` para interação com eventos.
+
+- **`GET /diasproibidos`**  
+  Retorna JSON com lista de dias ocupados, retirados da tabela de eventos (`get_all_eventos()` retorna eventos).  
+  Útil para API de frontend bloquear dias na interface.
+
+- **`POST /marca_consulta`**  
+  Recebe formulário com `data` (data do evento) e cookie com `usuario`, insere evento no banco via `insert_eventos()`.  
+  Redireciona para `/calendar`.
+
+- **`GET /events_by_user`**  
+  Retorna JSON com lista de eventos, onde cada evento tem um título "sua consulta" se for do usuário logado (usuário do cookie), ou "ocupado" se for evento de outro usuário.  
+  Interface para usuário visualizar seus horários.
+
+- **`GET /events`**  
+  Retorna JSON com todos os eventos e, para cada, o nome do usuário dono do evento (obtido do banco com `get_user()`).
+
+***
+
+### Usuários e autenticação
+
+- **`GET /sign_in`**  
+  Se não existir cookie `usuario`, retorna formulário para cadastro (`signin.html`).  
+  Se cookie existir, redireciona para `/calendar`.
+
+- **`POST /signin`**  
+  Recebe formulário com email, nome, senha para registrar usuário.  
+  Insere usuário no banco (`insert_user`), cria cookies `usuario` e `permissoes` e redireciona para `/calendar`.
+
+- **`GET /log_in`**  
+  Se não existir cookie `usuario`, retorna formulário de login (`login.html`).  
+  Se cookie existir, redireciona para `/calendar`.
+
+- **`POST /login`**  
+  Recebe email e senha para autenticação.  
+  Se válido (`verify_user()`), cria cookies `usuario` e `permissoes` e redireciona para `/calendar`.  
+  Se inválido, retorna formulário de login com erro.
+
+- **`POST /register`**  
+  Insere novo usuário no banco com dados do formulário e redireciona para `/`.
+
+- **`GET /users`**  
+  Retorna JSON com a lista de todos os usuários, incluindo id, email, permissões e nome.
+
+***
+
+## Cookies usados
+
+- **`usuario`**: email ou identificador do usuário logado.
+- **`permissoes`**: string que indica nível de acesso, por exemplo 'admin' ou 'usuario'.
+
+***
+
+## Resumo dos principais métodos do banco (presumidos)
+
+- `create_eventos_table()` e `create_user_table()`: criam as tabelas no banco.
+- `insert_eventos(data, usuario)`: insere evento associado a um usuário.
+- `get_all_eventos()`: retorna uma lista de todos os eventos existentes.
+- `insert_user(senha, usuario, tipo, nome)`: insere um novo usuário no banco.
+- `get_user(usuario)`: obtém dados do usuário pelo identificador.
+- `verify_user(senha, email)`: valida a senha do usuário para autenticação.
+- `get_all_users()`: retorna todos os usuários cadastrados.
+
+***
+
+Se desejar, posso ajudar com a documentação em formato de docstrings para o código ou um arquivo separado.
+
