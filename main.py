@@ -94,7 +94,7 @@ async def get_eventos(usuario:str=Cookie(...)):
     eventos=get_all_eventos()
     lista_eventos=[]
     for evento in eventos:
-        if evento[2]== usuario:
+        if evento[2] == usuario:
             lista_eventos.append({
             "id":evento[0],
             "title":"sua consulta",
@@ -116,7 +116,7 @@ async def get_eventos():
         
         lista_eventos.append({
             "id":evento[0],
-            "title":evento[2] ,
+            "title":get_user(evento[2])[-1] ,
             "start":evento[1]
             
         })

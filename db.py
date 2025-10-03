@@ -98,14 +98,5 @@ def verify_user(senha:str,usuario:str):
     connection.commit()
     user=cursor.fetchone()
     return user is not None
-eventos=get_all_eventos()
-lista_eventos=[]
-for evento in eventos:
-        print(get_user(evento[0]))
-        username=get_user(evento[2])[4]
-        lista_eventos.append({
-            "id":evento[0],
-            "title":username ,
-            "start":evento[1]
-            
-        })
+
+
